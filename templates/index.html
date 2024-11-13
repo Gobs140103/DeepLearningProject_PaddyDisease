@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paddy Disease Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e8f4f8;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .custom-file-upload {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #prediction {
+            margin-top: 20px;
+        }
+        .result {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        .confidence {
+            font-size: 16px;
+            color: #777;
+        }
+        .uploaded-image{
+            margin-top: 20px;
+            max-width: 40%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .footer {
+            position: fixed;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+            font-weight: bold;
+            background-color: #e8f4f8;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>PADDY DISEASE CLASSIFIER</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="fileInput" class="custom-file-upload">Choose Image</label>
+        <input type="file" id="fileInput" name="file" accept="image/*" required>
+        <button type="submit">Upload Image</button>
+    </form>
+
+    <div id="uploadedImageContainer" style="display: none;">
+        <h3>Uploaded Image</h3>
+        <img id="uploadedImage" class="uploaded-image" src="" alt="Uploaded Image">
+    </div>
+
+    <div id="prediction">
+        <p class="result" id="result"></p>
+        <p class="confidence" id="confidence"></p>
+    </div>
+
+    <div id="image" class="image">
+        <img id="confidencePlot" class="confidence-image" src="" alt="Confidence Plot" style="display: none;">
+    </div>
+</div>
+
+<div class="footer">
+    <p>DL MINI PROJECT created by GOBIND ARORA, 102115073, ELECTRONICS AND COMPUTER BRANCH</p>
+</div>
+
+<script>
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('uploadedImage').src = e.target.result;
+                document.getElementById('uploadedImageContainer').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const formData = new FormData();
+        formData.append('file', document.getElementById('fileInput').files[0]);
+
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.error) {
+                document.getElementById('result').textContent = "Error: " + result.error;
+                document.getElementById('confidence').textContent = '';
+                // document.getElementById('confidencePlot').style.display = 'none';
+            } else {
+                document.getElementById('result').textContent = 'Predicted Disease: ' + result.predicted_class;
+                document.getElementById('confidence').textContent = 'Confidence: ' + (result.confidence * 100).toFixed(2) + '%';
+                // document.getElementById('confidencePlot').src = result.plot_url;
+                // document.getElementById('confidencePlot').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+</script>
+
+</body>
+</html>
